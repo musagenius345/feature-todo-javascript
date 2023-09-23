@@ -23,6 +23,9 @@ const inputTodo = document.querySelector('.inputTodo');
  */
 const confirmDelete = document.querySelector('.confirmDelete');
 
+
+const deleteTodoYes = document.querySelector('.yesDelete')
+const goBackTodo = document.querySelector('.goBackTodo')
 /**
  * Checks if the Enter key is pressed.
  * @param {KeyboardEvent} e - The keyboard event.

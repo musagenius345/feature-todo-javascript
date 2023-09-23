@@ -17,6 +17,7 @@
     :root {
       --animate-duration: 400ms;
       --animate-delay: 0.9s;
+      --success: hsla(141, 71%, 49%, 1);
     }
     
     ::backdrop {
@@ -41,7 +42,7 @@
     }
 
     .success {
-      background-color: hsla(141, 71%, 49%, 1);
+      background-color: var(--success);
     }
 
     .smallBtn {}
@@ -50,11 +51,17 @@
     .neutral {
       background-color: hsla(212, 92%, 39%, 1);
     }
-    .todoCheck:not(:checked){
-      animation: bounce;
+    .todoCheck:checked{
+      animation: flip;
+      accent-color: var(--success);
       animation-duration: 1s;
       /* animation-delay: 2s; */
     }
+    .todoCheck:not(checked){
+      animation: jackInTheBox;
+      animation-duration: 1s;
+    }
+    
     /* Apply the strikethrough to .todoItem when .todoCheck is checked */
     .todoCheck:checked+.todoItem {
       text-decoration: line-through;

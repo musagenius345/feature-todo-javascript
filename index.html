@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
+  <!-- Include Picocss for styling -->
+  <link rel="stylesheet" href="pico.css">
+  <!-- Add your custom styles if needed -->
+  <style>
+    /* Add your custom styles here */
+    :root {
+      --animate-duration: 400ms;
+      --animate-delay: 0.9s;
+    }
+    
+    ::backdrop {
+      background-color: hsla(235, 0%, 0%, 0.5);
+    }
+
+    .confirmDelete {
+      border-radius: 16px;
+      padding: 2.4rem 2rem;
+      width: 66vw;
+      width: 66dvw;
+      --animation-duration: 1000;
+      --animation-delay: 1400;
+    }
+    
+    .confirmDelete > p {
+      font-size: 1.4rem;
+    }
+
+    .warning {
+      background-color: hsla(360, 74%, 47%, 1);
+    }
+
+    .success {
+      background-color: hsla(141, 71%, 49%, 1);
+    }
+
+    .smallBtn {}
+
+
+    .neutral {
+      background-color: hsla(212, 92%, 39%, 1);
+    }
+    .todoCheck:not(:checked){
+      animation: bounce;
+      animation-duration: 1s;
+      /* animation-delay: 2s; */
+    }
+    /* Apply the strikethrough to .todoItem when .todoCheck is checked */
+    .todoCheck:checked+.todoItem {
+      text-decoration: line-through;
+      opacity: 0.4;
+    }
+    
+    #taskList{
+      margin-block-start: 2.5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="text-center">To-Do List</h1>
+    <div class="input-group">
+      <input type="text" class="inputTodo" placeholder="Add a new task">
+      <button class="btn btn-primary addBtn">Add</button>
+    </div>
+    <ul id="taskList">
+      <!-- Tasks will be dynamically added here -->
+    </ul>
+    
+    
+    <!-- the popover attribute makes the element display none. When a popover is shown, it has display: none removed from it and it is put into the top layer so it will sit on top of all other page content.  -->
+    <div id="confirmDelete" class="confirmDelete" popover="manual">
+      <p>Are you sure?</p>
+      <div class="confirmButtons grid">
+        <button class="warning yesDelete">Delete</button>
+        <button class="btn goBackTodo">Go Back</button>
+      </div>
+    </div>
+  </div>
+</body>
+<script type="module" src="js/index.js"></script>
+
+</html>

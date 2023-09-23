@@ -55,6 +55,9 @@ function createTaskElement() {
   editBtn.textContent = 'edit';
   deleteBtn.textContent = 'delete';
 
+  // Set the task ID as a data attribute
+  newTodoDiv.dataset.taskId = todoID;
+
   // Append elements and animate the new task div
   newTodoDiv.classList.add('grid', 'animate__animated', 'animate__backInUp');
   newTodoDiv.append(todoCheckBox, todoPara, editBtn, deleteBtn);
@@ -216,11 +219,21 @@ function initialize() {
         // Save the updated todo list to localStorage
         saveTodoList(todoStore);
       });
+
+      // Update the todoStore with the edited text when saving changes
+      editBtn.addEventListener('click', () => {
+        if (editBtn.textContent === 'Save') {
+          saveTodo(todoPara, editBtn);
+          todoItem.text = todoPara.textContent;
+          saveTodoList(todoStore);
+        }
+      });
     }
   }
 
   console.log('Hello');
 }
+
 
 // Event listeners
 inputTodo.addEventListener('keydown', (e) => {

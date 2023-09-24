@@ -4,46 +4,35 @@
 import { getTodoList, saveTodoList } from './localStorage.js';
 
 /**
- * @constant {HTMLElement} todoList - Reference to the task list element.
+ * DOM Elements
  */
 const todoList = document.getElementById('taskList');
-
-/**
- * @constant {HTMLElement} addTodoBtn - Reference to the add button element.
- */
 const addTodoBtn = document.querySelector('.addBtn');
-
-/**
- * @constant {HTMLElement} inputTodo - Reference to the input field for adding tasks.
- */
 const inputTodo = document.querySelector('.inputTodo');
-
-/**
- * @constant {HTMLElement} ConfirmDelete - Confirm delete popover.
- */
 const confirmDelete = document.querySelector('.confirmDelete');
+const deleteTodoYes = document.querySelector('.yesDelete');
+const goBackTodo = document.querySelector('.goBackTodo');
 
-
-const deleteTodoYes = document.querySelector('.yesDelete')
-const goBackTodo = document.querySelector('.goBackTodo')
 /**
  * Checks if the Enter key is pressed.
  * @param {KeyboardEvent} e - The keyboard event.
  * @returns {boolean} True if the Enter key is pressed, otherwise false.
  */
-const enterClicked = e => e.key === 'Enter' || e.keyCode === 13;
+const enterClicked = (e) => e.key === 'Enter' || e.keyCode === 13;
 
 /**
- * Function to create a new task element.
- * @returns {Object} An object containing references to various task elements.
+ * Create a new task element.
+ * @param {string} todoText - The text of the task.
+ * @param {string} todoID - The ID of the task.
+ * @param {boolean} completed - The completion state of the task.
+ * @returns {HTMLElement} The task element.
  */
-function createTaskElement() {
+function createTaskElement(todoText, todoID, completed) {
   const newTodoDiv = document.createElement('div');
   const todoPara = document.createElement('p');
   const todoCheckBox = document.createElement('input');
   const deleteBtn = document.createElement('button');
   const editBtn = document.createElement('button');
-  const todoID = crypto.randomUUID();
 
   // Assign classes and attributes to elements
   todoPara.classList.add('todoItem');
@@ -58,6 +47,10 @@ function createTaskElement() {
   // Set the task ID as a data attribute
   newTodoDiv.dataset.taskId = todoID;
 
+  // Set initial text and completion state
+  todoPara.textContent = todoText;
+  todoCheckBox.checked = completed;
+
   // Append elements and animate the new task div
   newTodoDiv.classList.add('grid', 'animate__animated', 'animate__backInUp');
   newTodoDiv.append(todoCheckBox, todoPara, editBtn, deleteBtn);
@@ -66,43 +59,51 @@ function createTaskElement() {
 }
 
 /**
- * Function to add a task.
+ * Add a task.
  */
 function addTask() {
-  const { newTodoDiv, todoID, todoPara, editBtn, deleteBtn } = createTaskElement();
+  const todoText = inputTodo.value.trim();
+  if (todoText !== '') {
+    const todoID = crypto.randomUUID();
+    const { newTodoDiv, todoPara, editBtn, deleteBtn, todoCheckBox } = createTaskElement(
+      todoText,
+      todoID,
+      false
+    );
 
-  if (inputTodo.value.trim() !== '') {
-    todoPara.textContent = inputTodo.value.trim();
     todoList.appendChild(newTodoDiv);
 
     // Update todo list in localStorage
     const updatedTodoList = getTodoList();
-    updatedTodoList.push({ id: todoID, text: todoPara.textContent, completed: false });
+    updatedTodoList.push({ id: todoID, text: todoText, completed: false });
     saveTodoList(updatedTodoList);
 
     inputTodo.value = '';
-  }
 
-  // Add event listener for the "edit" button
-  editBtn.addEventListener('click', () => toggleEditState(todoPara, editBtn));
-  deleteBtn.addEventListener('click', () => deleteTodo(newTodoDiv, todoPara.textContent));
+    // Add event listener for the "edit" button
+    editBtn.addEventListener('click', () => toggleEditState(todoPara, editBtn, todoID, updatedTodoList));
+    deleteBtn.addEventListener('click', () => deleteTodo(newTodoDiv, todoText, updatedTodoList));
+    todoCheckBox.addEventListener('change', () => toggleCompleted(todoID, todoCheckBox.checked, updatedTodoList));
+  }
 }
 
 /**
- * Function to toggle edit/save state for a task.
+ * Toggle edit/save state for a task.
  * @param {HTMLElement} todoPara - Reference to the task paragraph element.
  * @param {HTMLElement} editBtn - Reference to the edit button element.
+ * @param {string} todoID - The ID of the todo item.
+ * @param {Array} todoStore - The todo store array.
  */
-function toggleEditState(todoPara, editBtn) {
+function toggleEditState(todoPara, editBtn, todoID, todoStore) {
   if (editBtn.textContent === 'edit') {
     editTodo(todoPara, editBtn);
-  } else {
-    saveTodo(todoPara, editBtn);
+  } else if (editBtn.textContent === 'Save') {
+    saveTodo(todoPara, editBtn, todoID, todoStore);
   }
 }
 
 /**
- * Function to edit a task.
+ * Edit a task.
  * @param {HTMLElement} todoPara - Reference to the task paragraph element.
  * @param {HTMLElement} editBtn - Reference to the edit button element.
  */
@@ -114,39 +115,37 @@ function editTodo(todoPara, editBtn) {
 }
 
 /**
- * Function to save a task.
+ * Save a task.
  * @param {HTMLElement} todoPara - Reference to the task paragraph element.
  * @param {HTMLElement} editBtn - Reference to the edit button element.
+ * @param {string} todoID - The ID of the todo item.
+ * @param {Array} todoStore - The todo store array.
  */
-function saveTodo(todoPara, editBtn) {
+function saveTodo(todoPara, editBtn, todoID, todoStore) {
   todoPara.setAttribute('contenteditable', 'false');
-  editBtn.textContent = 'edit';
-  editBtn.classList.remove('neutral');
-
-  // Retrieve the todo list from local storage
-  const todoStore = getTodoList();
 
   // Find and update the corresponding task in the todo list
-  const taskID = todoPara.parentElement.dataset.taskId;
-  const taskIndex = todoStore.findIndex(item => item.id === taskID);
+  const taskIndex = todoStore.findIndex((item) => item.id === todoID);
 
   if (taskIndex !== -1) {
     todoStore[taskIndex].text = todoPara.textContent;
-    // Save the updated todo list to local storage
-    saveTodoList(todoStore);
+    editBtn.textContent = 'edit';
+    editBtn.classList.remove('neutral');
+    saveTodoList(todoStore); // Save the updated todo list to localStorage
   }
 }
 
 /**
- * Function to delete a task with animation.
+ * Delete a task with animation.
  * @param {HTMLElement} todoContainer - Reference to the task container element.
  * @param {string} todoText - The text of the todo to be deleted.
+ * @param {Array} todoStore - The todo store array.
  */
-function deleteTodo(todoContainer, todoText) {
+function deleteTodo(todoContainer, todoText, todoStore) {
   // Get current todo list from localStorage
-  const currentTodoList = getTodoList();
+  const currentTodoList = todoStore;
 
-  if (supportsPopover) {
+  if (supportsPopover()) {
     confirmDelete.classList.add('animate__animated', 'animate__slideInRight');
     confirmDelete.showPopover();
 
@@ -160,7 +159,7 @@ function deleteTodo(todoContainer, todoText) {
         todoContainer.remove(); // Remove the element after the animation
 
         // Find and remove the corresponding task from the current todo list
-        const index = currentTodoList.findIndex(item => item.text === todoText);
+        const index = currentTodoList.findIndex((item) => item.text === todoText);
         if (index !== -1) {
           currentTodoList.splice(index, 1);
           saveTodoList(currentTodoList); // Update the todo list in localStorage
@@ -178,15 +177,31 @@ function deleteTodo(todoContainer, todoText) {
 }
 
 /**
- * Function to Check the Modern native Popover API Support
+ * Toggle the completion state of a task.
+ * @param {string} todoID - The ID of the todo item.
+ * @param {boolean} completed - The completion state of the todo item.
+ * @param {Array} todoStore - The todo store array.
+ */
+function toggleCompleted(todoID, completed, todoStore) {
+  const taskIndex = todoStore.findIndex((item) => item.id === todoID);
+
+  if (taskIndex !== -1) {
+    todoStore[taskIndex].completed = completed;
+    saveTodoList(todoStore); // Save the updated todo list to localStorage
+  }
+}
+
+/**
+ * Check if the Modern native Popover API is supported.
  * @returns {boolean}
  */
 function supportsPopover() {
-  return HTMLElement.prototype.hasOwnProperty("popover");
+  return HTMLElement.prototype.hasOwnProperty('popover');
 }
 
-document.addEventListener('DOMContentLoaded', () => initialize());
-
+/**
+ * Initialize the application.
+ */
 function initialize() {
   // Retrieve the todo list from local storage
   const todoStore = getTodoList();
@@ -195,11 +210,11 @@ function initialize() {
   if (todoStore && todoStore.length > 0) {
     // Loop through the todo list and create and display tasks for each item
     for (const todoItem of todoStore) {
-      const { newTodoDiv, todoPara, todoCheckBox, editBtn, deleteBtn } = createTaskElement();
-
-      // Set the task text and completed status based on local storage data
-      todoPara.textContent = todoItem.text;
-      todoCheckBox.checked = todoItem.completed;
+      const { newTodoDiv, todoPara, todoCheckBox, editBtn, deleteBtn } = createTaskElement(
+        todoItem.text,
+        todoItem.id,
+        todoItem.completed
+      );
 
       // Append elements to the task list
       newTodoDiv.appendChild(todoCheckBox);
@@ -209,31 +224,26 @@ function initialize() {
       todoList.appendChild(newTodoDiv);
 
       // Add event listeners for the "edit" button and "delete" button
-      editBtn.addEventListener('click', () => toggleEditState(todoPara, editBtn));
-      deleteBtn.addEventListener('click', () => deleteTodo(newTodoDiv, todoItem.text));
-
-      // Add event listener for checkbox change event
-      todoCheckBox.addEventListener('change', () => {
-        // Update the completed property of the corresponding todo item
-        todoItem.completed = todoCheckBox.checked;
-        // Save the updated todo list to localStorage
-        saveTodoList(todoStore);
-      });
-
-      // Update the todoStore with the edited text when saving changes
-      editBtn.addEventListener('click', () => {
-        if (editBtn.textContent === 'Save') {
-          saveTodo(todoPara, editBtn);
-          todoItem.text = todoPara.textContent;
-          saveTodoList(todoStore);
-        }
-      });
+      editBtn.addEventListener('click', () =>
+        toggleEditState(todoPara, editBtn, todoItem.id, todoStore)
+      );
+      deleteBtn.addEventListener('click', () => deleteTodo(newTodoDiv, todoItem.text, todoStore));
+      todoCheckBox.addEventListener('change', () =>
+        toggleCompleted(todoItem.id, todoCheckBox.checked, todoStore)
+      );
     }
   }
 
+  // Event listeners for new edit buttons
+  const editButtons = document.querySelectorAll('.success');
+  editButtons.forEach((editBtn) =>
+    editBtn.addEventListener('click', () =>
+      toggleEditState(editBtn.previousElementSibling, editBtn)
+    )
+  );
+
   console.log('Hello');
 }
-
 
 // Event listeners
 inputTodo.addEventListener('keydown', (e) => {
@@ -245,3 +255,6 @@ inputTodo.addEventListener('keydown', (e) => {
 addTodoBtn.addEventListener('click', () => {
   addTask();
 });
+
+// Initialize the application when the DOM is loaded
+document.addEventListener('DOMContentLoaded', initialize);
